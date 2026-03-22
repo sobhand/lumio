@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  children Child[]
+}
+
+model Child {
+  id        String   @id @default(uuid())
+  name      String
+  age       Int
+  ageGroup  String   // "3-5", "6-8", "9-10"
+  avatar    String   @default("sun")
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parentId String
+  parent   User   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  childHabits  ChildHabit[]
+  habitLogs    HabitLog[]
+  streaks      Streak[]
+  achievements Achievement[]
+}
+
+model Habit {
+  id         String  @id @default(uuid())
+  name       String
+  category   String  // hygiene, responsibility, kindness, study, prayer, service
+  frequency  String  @default("daily")
+  difficulty String  @default("easy") // easy, medium, hard
+  isActive   Boolean @default(true)
+  isTemplate Boolean @default(false)
+  ageGroup   String? // null means all ages
+
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  childHabits ChildHabit[]
+}
+
+model ChildHabit {
+  id       String  @id @default(uuid())
+  isActive Boolean @default(true)
+
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  habitLogs HabitLog[]
+
+  @@unique([childId, habitId])
+}
+
+model HabitLog {
+  id          String   @id @default(uuid())
+  date        String   // YYYY-MM-DD
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  points      Int      @default(0)
+
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  childHabitId String
+  childHabit   ChildHabit @relation(fields: [childHabitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([childHabitId, date])
+}
+
+model Streak {
+  id           String @id @default(uuid())
+  currentStreak Int   @default(0)
+  longestStreak Int   @default(0)
+  lastDate     String? // YYYY-MM-DD
+
+  childId String @unique
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Achievement {
+  id        String   @id @default(uuid())
+  type      String   // first_complete, streak_3, streak_7, streak_14, full_day, etc.
+  title     String
+  earnedAt  DateTime @default(now())
+
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, type])
+}
