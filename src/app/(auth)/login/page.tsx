@@ -31,8 +31,8 @@ export default function LoginPage() {
 
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      setError("Something went wrong");
+    } catch (err) {
+      setError("Network error: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setLoading(false);
     }
