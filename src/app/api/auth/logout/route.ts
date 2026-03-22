@@ -4,8 +4,8 @@ export async function POST() {
   const response = NextResponse.json({ success: true });
   response.cookies.set("token", "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     maxAge: 0,
     path: "/",
   });

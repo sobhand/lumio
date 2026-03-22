@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     });
     response.cookies.set("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err) {
     console.error("Login error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: "Server error", details: message }, { status: 500 });
   }
 }
